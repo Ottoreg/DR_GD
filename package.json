@@ -1,0 +1,16 @@
+{
+  "name": "dr-gd",
+  "private": true,
+  "description": "Atelier de sorts façon Dofus Retro",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

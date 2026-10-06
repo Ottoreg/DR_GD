@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier de sorts Retro</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Atelier de sorts</h1>
+  <span>façon Dofus Retro · 1.29</span>
+  <nav class="views" id="views">
+    <button data-view="classes">🛡️ Classes</button>
+    <button data-view="spells">📜 Sorts</button>
+    <button data-view="preview">🎯 Prévisualisation</button>
+    <button data-view="maps">🗺️ Cartes</button>
+    <button id="pxWorkshop" class="views-extra" title="Atelier d'icônes pixel art : créer et retoucher plusieurs icônes à la suite">🎨 Atelier</button>
+  </nav>
+  <button id="bookOpenTop" class="book-btn" title="Ouvrir la page des sorts (touche S)">📖 <kbd>S</kbd></button>
+</header>
+
+<!-- ============ Interface Classes ============ -->
+<section id="classView">
+  <aside class="box">
+    <h2>Classes</h2>
+    <div class="c">
+      <div id="clList" class="cl-list"></div>
+      <div class="row">
+        <button id="clNew" class="grow">Nouvelle</button>
+        <button id="clDup" class="grow">Dupliquer</button>
+        <button id="clDel" class="grow">Supprimer</button>
+      </div>
+      <div class="row">
+        <button id="clExport" class="grow">Exporter la classe</button>
+        <button id="clExportAll" class="grow">Exporter tout</button>
+      </div>
+      <button id="clImport">Importer des classes…</button>
+      <input type="file" id="clImportFile" accept="application/json,.json" class="hidden">
+      <div class="hint">L'export contient les classes et tout ce dont elles ont besoin : sorts, zones perso et invocations.</div>
+    </div>
+  </aside>
+  <section class="box">
+    <h2>Fiche de classe</h2>
+    <div class="c" id="clEditor">
+      <div class="cl-head">
+        <span class="cl-badge big" id="clBadge"></span>
+        <div class="c" style="padding:0;flex:1">
+          <label>Nom<input type="text" id="clName" maxlength="40"></label>
+          <div class="row">
+            <label>Icône <select id="clIcon" style="width:62px;font-size:16px;padding:1px"></select><button class="px-open" data-pxfor="class" title="Créer / modifier une icône en pixel art">🎨</button></label>
+            <label>Couleur <input type="color" id="clColor"></label>
+          </div>
+        </div>
+      </div>
+      <label>Description<textarea id="clDesc" rows="2"></textarea></label>
+      <div class="lvl-title">Sorts de la classe (par niveau d'apprentissage)</div>
+      <div id="clSpells" class="cl-spells"></div>
+      <div class="row cl-add">
+        <select id="clAddSel" class="grow" style="width:auto"></select>
+        <label>appris au niv. <input type="number" id="clAddLvl" min="1" max="200" value="1"></label>
+        <button id="clAdd">+ Ajouter</button>
+      </div>
+      <div class="hint">Les sorts se créent et se modifient dans l'interface <b>📜 Sorts</b>. Ici, tu choisis ceux que la classe apprend et à quel niveau de personnage.</div>
+      <button id="clTest" class="on">▶ Tester cette classe en prévisualisation</button>
+    </div>
+  </section>
+</section>
+
+<main>
+  <!-- ============ Colonne gauche : carte & lanceur ============ -->
+  <aside id="mapAside">
+    <!-- Éditeur de cartes (interface Cartes) -->
+    <section class="box only-maps">
+      <h2>Cartes</h2>
+      <div class="c">
+        <select id="meSel"></select>
+        <div class="row">
+          <button id="meNew" class="grow">Nouvelle</button>
+          <button id="meDup" class="grow">Dupliquer</button>
+          <button id="meDel" class="grow">Supprimer</button>
+        </div>
+        <label>Nom<input type="text" id="meName" maxlength="40"></label>
+        <div class="stats">
+          <label title="Nombre de cases par ligne">Largeur <input type="number" id="meW" min="5" max="30"></label>
+          <label title="Nombre de lignes (doubles) de cases">Hauteur <input type="number" id="meH" min="5" max="30"></label>
+        </div>
+        <div class="hint" id="meInfo"></div>
+        <div class="lvl-title">Disposition par défaut</div>
+        <div class="tools">
+          <button data-tool="caster"><i>🧙</i>Départ</button>
+          <button data-tool="rock"><i>🪨</i>Obstacle</button>
+          <button data-tool="hole"><i>🕳️</i>Trou</button>
+          <button data-tool="ally"><i>🔵</i>Allié</button>
+          <button data-tool="enemy"><i>🔴</i>Ennemi</button>
+          <button data-tool="erase"><i>🧽</i>Gomme</button>
+        </div>
+        <div class="row">
+          <button id="meRandom" class="grow">Remplir au hasard</button>
+          <button id="meClear" class="grow">Vider</button>
+        </div>
+        <div class="row">
+          <button id="meExport" class="grow">Exporter la carte</button>
+          <button id="meExportAll" class="grow">Exporter tout</button>
+        </div>
+        <button id="meImport">Importer des cartes…</button>
+        <input type="file" id="meImportFile" accept="application/json,.json" class="hidden">
+        <div class="hint">Clique ou glisse sur la carte pour placer les éléments (clic droit : gomme). Ces éléments sont la disposition de départ : en prévisualisation, tu peux les déplacer ou les modifier sans toucher à la carte enregistrée.</div>
+      </div>
+    </section>
+
+    <section class="box not-maps">
+      <h2>Terrain</h2>
+      <div class="c">
+        <label>Carte<select id="mapSel"></select></label>
+        <button id="mapReset" title="Recharge la disposition enregistrée de la carte (et retire glyphes, pièges et invocations)">↺ Remettre la carte d'origine</button>
+        <div class="tools" id="tools">
+          <button data-tool="caster"><i>🧙</i>Lanceur</button>
+          <button data-tool="rock"><i>🪨</i>Obstacle</button>
+          <button data-tool="hole"><i>🕳️</i>Trou</button>
+          <button data-tool="ally"><i>🔵</i>Allié</button>
+          <button data-tool="enemy"><i>🔴</i>Ennemi</button>
+          <button data-tool="erase"><i>🧽</i>Gomme</button>
+          <button data-tool="cast"><i>🎯</i>Lancer</button>
+          <button data-tool="move" title="Clique un personnage, puis une case : il y marche case par case et déclenche les pièges sur son chemin"><i>🚶</i>Déplacer</button>
+          <button data-tool="edit" id="editTool"><i>✏️</i>Éditer portée</button>
+        </div>
+        <div class="hint">Obstacles et personnages bloquent la ligne de vue, les trous non. Clic droit = gomme.</div>
+        <div class="row">
+          <button id="randomMap" class="grow">Carte aléatoire</button>
+          <button id="clearMap" class="grow">Vider la carte</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="box not-maps">
+      <h2>Caractéristiques du lanceur</h2>
+      <div class="c">
+        <div class="stats">
+          <label>Force <input type="number" data-st="force"></label>
+          <label>Intelligence <input type="number" data-st="intel"></label>
+          <label>Chance <input type="number" data-st="chance"></label>
+          <label>Agilité <input type="number" data-st="agi"></label>
+          <label>Dommages <input type="number" data-st="dmg"></label>
+          <label>% Dommages <input type="number" data-st="pctDmg"></label>
+          <label>Soins <input type="number" data-st="soins"></label>
+          <label title="Points de vie maximum du lanceur">PV <input type="number" data-st="pv" min="1" max="99999"></label>
+          <label title="Points d'action par tour">PA <input type="number" data-st="pa" min="0" max="30"></label>
+          <label title="Points de mouvement par tour">PM <input type="number" data-st="pm" min="0" max="30"></label>
+          <label title="Nombre maximum d'invocations en même temps sur la carte">Invocations <input type="number" data-st="invoc" min="0" max="10"></label>
+        </div>
+        <div class="hint">Dommages = base × (100 + carac + %dom) / 100 + dommages. Soins = base × (100 + intel) / 100 + soins. Force pour Terre et Neutre, Intelligence pour Feu, Chance pour Eau, Agilité pour Air.</div>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Affichage</h2>
+      <div class="c">
+        <label class="chk"><input type="checkbox" data-s="showRay"> Tracer la ligne de vue au survol</label>
+        <label class="chk"><input type="checkbox" data-s="grid"> Grille de combat</label>
+        <label class="chk"><input type="checkbox" data-s="showNumbers"> Valeurs au-dessus des cibles</label>
+        <label class="chk"><input type="checkbox" data-s="showHp"> Barres de vie</label>
+        <div class="legend">
+          <div><span class="sw" style="background:#2f5fd6"></span>Portée</div>
+          <div><span class="sw" style="background:#a9b2c9"></span>Hors ligne de vue</div>
+          <div><span class="sw" style="background:#e0512a"></span>Zone d'effet</div>
+          <div><span class="sw" style="background:#8f877a"></span>Obstacle</div>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <!-- ============ Centre : carte ============ -->
+  <section class="stage">
+    <div class="frame"><canvas id="cv"></canvas></div>
+    <div class="status">
+      <span id="hoverInfo">Survole une case…</span>
+      <span id="count"></span>
+    </div>
+    <section class="box not-maps">
+      <h2>Aperçu du lancer</h2>
+      <div class="c preview" id="preview"></div>
+    </section>
+    <section class="box not-maps">
+      <h2>Combat</h2>
+      <div class="c">
+        <div class="row">
+          <span class="turn">Tour <b id="turnNo">1</b></span>
+          <button id="nextTurn" class="on">Tour suivant ▶</button>
+          <button id="healAll" title="Rend tous les PV et retire les poisons, sans changer de tour">❤ Soigner tout</button>
+          <button id="clearGlyphs">Retirer glyphes et pièges</button>
+          <button id="resetTurns" title="Tour 1, PV pleins, glyphes, pièges et journal effacés">Remettre à zéro</button>
+        </div>
+        <div class="hud" id="hud"></div>
+        <label class="chk" title="Décoché : lancers et déplacements illimités (les PV restent appliqués)"><input type="checkbox" data-s="rules"> Appliquer les règles de tour : PA et PM limités, relance, lancers par tour et par cible</label>
+        <div class="lvl-title">Personnages</div>
+        <div class="lt-wrap" id="rtTable"></div>
+        <div id="glyphList" class="glyph-list"></div>
+        <div id="invOnMap" class="inv-list"></div>
+        <div id="combatLog" class="log"></div>
+        <div class="hint">Outil <b>🎯 Lancer</b> : lance le sort (coûte ses PA) et applique ses effets pour de vrai : les dommages tiennent compte des résistances, et un personnage à 0 PV est vaincu. <b>Tour suivant</b> : glyphes et poisons agissent, puis les PA et PM de chacun sont rendus. Outil <b>🚶 Déplacer</b> : le lanceur et les invocations dépensent leurs PM. Entrer dans la zone d'un piège le déclenche. Les PV maximum et les résistances de chaque personnage se règlent dans le tableau ci-dessus (ceux du lanceur dans ses caractéristiques).</div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ============ Colonne droite (Prévisualisation) : classe testée ============ -->
+  <aside id="pvAside" class="only-preview">
+    <section class="box">
+      <h2>Classe testée</h2>
+      <div class="c">
+        <select id="pvClass"></select>
+        <div id="pvClassHead"></div>
+        <label class="stats-one">Niveau du personnage <input type="number" id="pvLvl" min="1" max="200"></label>
+        <div id="pvSpells" class="pv-spells"></div>
+      </div>
+    </section>
+    <section class="box">
+      <h2>Sort sélectionné</h2>
+      <div class="c">
+        <div class="lvl-title">Niveau du sort</div>
+        <div class="seg lvls" id="pvLvlSeg"></div>
+        <div class="card" id="pvCard"></div>
+        <button id="pvEdit">✏️ Modifier ce sort (interface Sorts)</button>
+      </div>
+    </section>
+  </aside>
+
+  <!-- ============ Colonne droite (Sorts) : édition du sort ============ -->
+  <aside id="spellAside" class="only-spells">
+    <nav class="tabs" id="tabs">
+      <button data-tab="spell">📜 Sort</button>
+      <button data-tab="zones">🔶 Zones perso</button>
+      <button data-tab="summons">🐾 Invocations</button>
+    </nav>
+
+    <section class="box pane-summons">
+      <h2>Entités invocables</h2>
+      <div class="c">
+        <select id="invSel"></select>
+        <div class="row">
+          <button id="invNew" class="grow">Nouvelle</button>
+          <button id="invDup" class="grow">Dupliquer</button>
+          <button id="invDel" class="grow">Supprimer</button>
+        </div>
+        <div class="row" style="flex-wrap:nowrap;align-items:flex-end">
+          <label style="flex-direction:column;align-items:flex-start;gap:2px">Icône<span class="row" style="gap:3px;flex-wrap:nowrap"><select id="invIcon" style="width:62px;font-size:16px;padding:1px"></select><button class="px-open" data-pxfor="summon" title="Créer / modifier une icône en pixel art">🎨</button></span></label>
+          <label class="grow" style="flex-direction:column;align-items:stretch;gap:2px">Nom<input type="text" id="invName" maxlength="40"></label>
+        </div>
+        <div class="lvl-title">Type</div>
+        <div class="inv-kind" id="invKind">
+          <button data-kind="object"><i>📦</i>Objet</button>
+          <button data-kind="creature"><i>🐗</i>Créature</button>
+          <button data-kind="obstacle"><i>🧱</i>Obstacle</button>
+        </div>
+        <div class="hint" id="invKindHint"></div>
+        <div class="lvl-title">Caractéristiques par niveau</div>
+        <div class="lt-wrap" id="invLevels"></div>
+        <div class="lvl-title">Sorts de l'entité</div>
+        <div class="inv-spells" id="invSpells"></div>
+        <div class="hint">Coche les sorts du grimoire que cette entité peut lancer. Pour qu'un sort l'invoque, ajoute-lui un effet <b>Invocation</b> (onglet Sort, encadré Effets) et choisis cette entité.</div>
+      </div>
+    </section>
+
+    <section class="box pane-zones">
+      <h2>Zones d'effet personnalisées</h2>
+      <div class="c">
+        <select id="zoneSel"></select>
+        <div class="row">
+          <button id="zNew" class="grow">Nouvelle</button>
+          <button id="zDup" class="grow">Dupliquer</button>
+          <button id="zDel" class="grow">Supprimer</button>
+        </div>
+        <label>Nom<input type="text" id="zName" maxlength="40"></label>
+        <div class="zone-ed"><canvas id="zcv"></canvas></div>
+        <div class="hint" id="zInfo"></div>
+        <label class="chk"><input type="checkbox" id="zOriented"> Orientée selon la direction du lancer</label>
+        <label class="chk"><input type="checkbox" id="zMirror"> Symétrie gauche / droite en dessinant</label>
+        <div class="row">
+          <select id="zGen" class="grow" style="width:auto"></select>
+          <label>Taille <input type="number" id="zGenSize" min="0" max="6" value="3"></label>
+          <button id="zGenBtn">Générer</button>
+        </div>
+        <div class="row">
+          <button id="zClear">Vider</button>
+          <button id="zUse" class="grow on"></button>
+        </div>
+        <div class="hint">Clique ou glisse sur les cases pour les ajouter ou les retirer. La case encadrée en jaune est la case ciblée, le lanceur est en bas à gauche. Une zone orientée pivote selon le côté d'où le sort est lancé : un cône s'ouvre toujours vers l'arrière de la cible.</div>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Grimoire</h2>
+      <div class="c">
+        <div class="row">
+          <select id="spellSel" class="grow" style="width:auto"></select>
+          <button id="bookOpen" title="Ouvrir la page des sorts (touche S)">📖</button>
+        </div>
+        <div class="row">
+          <button id="spNew" class="grow">Nouveau</button>
+          <button id="spDup" class="grow">Dupliquer</button>
+          <button id="spDel" class="grow">Supprimer</button>
+        </div>
+        <div class="row">
+          <button id="spExport" class="grow">Exporter les sorts</button>
+          <button id="spImport" class="grow">Importer des sorts</button>
+          <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+        </div>
+        <div class="lvl-title">Niveau du sort</div>
+        <div class="seg lvls" id="lvlSeg"></div>
+        <label class="chk" title="Quand c'est coché, changer un type d'effet, un élément, une cible, le type de glyphe, ou un choix de rebond (activé, cibles visées, ligne de vue, départ depuis une case vide) s'applique aux 6 niveaux. Les valeurs chiffrées restent propres à chaque niveau."><input type="checkbox" data-sn="syncLevels"> 🔗 Appliquer les choix d'effets et de rebond à tous les niveaux</label>
+        <div class="row">
+          <button id="lvlCopy" class="grow" title="Recopie tous les réglages de ce niveau sur les niveaux supérieurs">Copier vers niv. suivants</button>
+          <button id="lvlInterp" class="grow" title="Calcule les valeurs d'effets des niveaux 2 à 5 entre le niveau 1 et le niveau 6">Progression 1 → 6</button>
+        </div>
+        <div class="card" id="card"></div>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Informations <span class="lvlTag"></span></h2>
+      <div class="c">
+        <div class="row" style="flex-wrap:nowrap;align-items:flex-end">
+          <label style="flex-direction:column;align-items:flex-start;gap:2px">Icône<span class="row" style="gap:3px;flex-wrap:nowrap"><select data-sn="icon" id="iconSel" style="width:62px;font-size:16px;padding:1px"></select><button class="px-open" data-pxfor="spell" title="Créer / modifier une icône en pixel art">🎨</button></span></label>
+          <label class="grow" style="flex-direction:column;align-items:stretch;gap:2px">Nom<input type="text" data-sn="name" maxlength="60"></label>
+        </div>
+        <label>Description<textarea data-sn="desc" rows="2"></textarea></label>
+        <div class="stats">
+          <label>Coût en PA <input type="number" data-sp="pa" min="0" max="12"></label>
+          <label>Relance (tours) <input type="number" data-sp="cooldown" min="0" max="20"></label>
+          <label>Lancers / tour <input type="number" data-sp="perTurn" min="0" max="10"></label>
+          <label>Lancers / cible <input type="number" data-sp="perTarget" min="0" max="10"></label>
+          <label>Critique 1/ <input type="number" data-sp="cc" min="0" max="999"></label>
+          <label>Échec 1/ <input type="number" data-sp="ec" min="0" max="999"></label>
+        </div>
+        <div class="hint">Nom et description sont communs à tous les niveaux ; le reste est propre au niveau choisi. 0 = illimité (lancers) ou aucun (relance, critique, échec).</div>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Portée <span class="lvlTag"></span></h2>
+      <div class="c">
+        <select id="preset">
+          <option value="">— Préréglage —</option>
+          <option value="self">Soi-même (0)</option>
+          <option value="cac">Corps à corps (1)</option>
+          <option value="1-3">1 à 3</option>
+          <option value="1-5">1 à 5</option>
+          <option value="1-8">1 à 8</option>
+          <option value="2-6">2 à 6 (pas au CàC)</option>
+          <option value="line4">En ligne 1 à 4</option>
+          <option value="line6nolos">En ligne 1 à 6, sans ligne de vue</option>
+          <option value="diag4">En diagonale 1 à 4</option>
+          <option value="star5">Ligne + diagonale 1 à 5</option>
+          <option value="custom">Personnalisée</option>
+        </select>
+
+        <div class="seg">
+          <button data-mode="standard">Standard</button>
+          <button data-mode="custom">Personnalisée</button>
+        </div>
+
+        <div id="stdBox" class="c" style="padding:0">
+          <div class="row">
+            <label>PO min <input type="number" data-sp="min" min="0" max="30"></label>
+            <label>PO max <input type="number" data-sp="max" min="0" max="30"></label>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" data-sp="mod"> Portée modifiable</label>
+            <label>+ <input type="number" data-sp="bonus" id="bonus" min="-10" max="20"> PO</label>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" data-sp="line"> Lancer en ligne</label>
+            <label><input type="checkbox" data-sp="diag"> En diagonale</label>
+          </div>
+        </div>
+
+        <div id="customBox" class="c hidden" style="padding:0">
+          <div class="hint">Outil <b>Éditer portée</b> : clique (ou glisse) sur la carte pour ajouter ou retirer des cases atteignables, relatives au lanceur.</div>
+          <div class="row">
+            <label><input type="checkbox" data-s="sym"> Symétrie ×4</label>
+          </div>
+          <div class="row">
+            <button id="fromStd" class="grow">Copier la portée standard</button>
+            <button id="clearPat">Vider</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label><input type="checkbox" data-sp="los"> Ligne de vue</label>
+          <label><input type="checkbox" data-sp="free"> Case libre</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Zone d'effet <span class="lvlTag"></span></h2>
+      <div class="c">
+        <div class="row">
+          <select data-sp="aoe" id="aoeSel" class="grow" style="width:auto"></select>
+          <label>Taille <input type="number" data-sp="aoeSize" id="aoeSize" min="1" max="10"></label>
+        </div>
+        <button id="goZones">🔶 Créer / modifier une zone personnalisée</button>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Rebond <span class="lvlTag"></span></h2>
+      <div class="c">
+        <label class="chk"><input type="checkbox" data-sp="bounce"> Le sort rebondit sur d'autres cibles</label>
+        <div id="bounceBox" class="c" style="padding:0">
+          <div class="stats">
+            <label>Cibles suivantes <input type="number" data-sp="bounces" min="1" max="10"></label>
+            <label>Portée du bond <input type="number" data-sp="bounceRange" min="1" max="15"></label>
+            <label>Réduction / bond <span><input type="number" data-sp="bounceDecay" min="0" max="100"> %</span></label>
+            <label>Vise <select data-sp="bounceTarget" style="width:auto"><option value="enemies">Ennemis</option><option value="allies">Alliés</option><option value="all">Tous</option></select></label>
+          </div>
+          <label class="chk"><input type="checkbox" data-sp="bounceLos"> Ligne de vue nécessaire entre deux bonds</label>
+          <label class="chk"><input type="checkbox" data-sp="bounceFromEmpty"> Peut partir d'une case vide</label>
+          <div class="hint">Par défaut, la première cible doit être un personnage. Avec « Peut partir d'une case vide », on peut viser une case libre et le premier bond part de là. Après la cible, le sort se réplique (zone et effets compris) sur le personnage le plus proche, dans la portée du bond, pas encore touché par la chaîne. Le lanceur compte comme un allié : il peut recevoir un rebond si le sort vise les alliés ou tous. En cas d'égalité de distance, l'ordre de priorité est haut-droite, bas-droite, bas-gauche, puis haut-gauche. La réduction s'applique à chaque bond : avec 20 %, on a ×0,8 puis ×0,64, etc.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Effets <span class="lvlTag"></span></h2>
+      <div class="c">
+        <div id="fxList" class="c" style="padding:0"></div>
+        <button id="fxAdd">+ Ajouter un effet</button>
+      </div>
+    </section>
+
+    <section class="box pane-spell">
+      <h2>Valeurs par niveau</h2>
+      <div class="c">
+        <div class="lt-wrap" data-lt></div>
+        <div class="hint">Modifie directement PA, portée et dommages des 6 niveaux. Pour ajouter ou retirer un effet sur un niveau, passe par l'encadré Effets.</div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<!-- ============ Atelier d'icônes pixel art ============ -->
+<div id="pxEd" class="book-overlay hidden" role="dialog" aria-modal="true" aria-label="Atelier d'icônes">
+  <div class="book px-win">
+    <div class="book-title">
+      <span>🎨 Atelier d'icônes</span>
+      <button id="pxClose" title="Fermer (Échap)">✕</button>
+    </div>
+    <div class="px-body">
+      <div class="px-left">
+        <div class="row px-tools">
+          <div class="seg">
+            <button data-pxt="pen" title="Crayon (B)">✏️</button>
+            <button data-pxt="erase" title="Gomme (E)">🧽</button>
+            <button data-pxt="fill" title="Pot de peinture (G)">🪣</button>
+            <button data-pxt="pick" title="Pipette (I)">💧</button>
+          </div>
+          <button id="pxMirror" title="Symétrie gauche / droite en dessinant">⇆ Miroir</button>
+          <button id="pxGrid" title="Afficher la grille">▦ Grille</button>
+          <button id="pxUndo" title="Annuler (Ctrl+Z)">↶</button>
+          <button id="pxRedo" title="Rétablir (Ctrl+Y)">↷</button>
+        </div>
+        <div class="px-stage"><canvas id="pxCv"></canvas></div>
+        <div class="px-pal" id="pxPal"></div>
+        <div class="row">
+          <label>Couleur <input type="color" id="pxColor"></label>
+          <span class="hint">Récentes :</span>
+          <span class="px-recent" id="pxRecent"></span>
+        </div>
+      </div>
+      <div class="px-right">
+        <div class="lvl-title">Mes icônes</div>
+        <div class="px-lib" id="pxLib"></div>
+        <div class="row">
+          <button id="pxNew" class="grow">Nouvelle</button>
+          <button id="pxDup" class="grow">Dupliquer</button>
+          <button id="pxDel" class="grow">Supprimer</button>
+        </div>
+        <label>Nom<input type="text" id="pxName" maxlength="30"></label>
+        <div class="row">
+          <span>Taille</span>
+          <div class="seg grow">
+            <button data-pxs="16">16 × 16</button>
+            <button data-pxs="32">32 × 32</button>
+          </div>
+        </div>
+        <div class="lvl-title">Aperçu</div>
+        <div class="px-prev" id="pxPrev"></div>
+        <div class="row">
+          <button id="pxFlip" class="grow">↔ Retourner</button>
+          <button id="pxClear" class="grow">Effacer tout</button>
+        </div>
+        <button id="pxImport">🖼️ Importer une image (réduite en pixels)…</button>
+        <input type="file" id="pxImportFile" accept="image/*" class="hidden">
+        <div class="lvl-title">Partager</div>
+        <div class="row">
+          <button id="pxExportOne" class="grow" title="Fichier JSON avec l'icône affichée">Exporter l'icône</button>
+          <button id="pxExportAll" class="grow" title="Fichier JSON avec toute la bibliothèque">Exporter tout</button>
+        </div>
+        <div class="row">
+          <button id="pxExportPng" class="grow" title="Image PNG agrandie ×8, pixels nets">⬇ PNG ×8</button>
+          <button id="pxImportJson" class="grow">Importer des icônes…</button>
+          <input type="file" id="pxImportJsonFile" accept="application/json,.json" class="hidden">
+        </div>
+        <button id="pxUse" class="on"></button>
+        <div class="hint">Clic : dessiner · clic droit : gommer · glisser pour tracer. Les modifications s'appliquent tout de suite partout où l'icône est utilisée.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Page des sorts (fenêtre façon Retro) ============ -->
+<div id="book" class="book-overlay hidden" role="dialog" aria-modal="true" aria-label="Sorts">
+  <div class="book">
+    <div class="book-title">
+      <span>Sorts</span>
+      <button id="bookClose" title="Fermer (Échap)">✕</button>
+    </div>
+    <div class="book-body">
+      <div class="book-side">
+        <div class="book-list" id="bookList"></div>
+        <button id="bookNew">+ Nouveau sort</button>
+      </div>
+      <div class="book-detail" id="bookDetail">
+        <div id="bookInfo" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div class="bd-sec">Valeurs par niveau</div>
+        <div class="lt-wrap" data-lt></div>
+        <div class="row"><button id="bookUse" class="on">Prévisualiser sur la carte</button><span class="hint">Les autres réglages se modifient dans la colonne de droite.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
