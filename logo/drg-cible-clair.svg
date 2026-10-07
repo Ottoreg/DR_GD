@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 80" width="500" height="160" role="img" aria-label="DRG">
+<g transform="translate(0 10)"><path d="M10 0V60H26A30 30 0 0 0 26 0ZM70 60V0H88A15 15 0 0 1 88 30H70M169.2 8.8A30 30 0 1 0 178 30" fill="none" stroke="#2a2116" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/><path d="M81 30H91L109 64.5H99Z" fill="#2a2116"/>
+<path d="M158 22.5L173 30L158 37.5L143 30Z" fill="#b06a1e"/></g>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 105" width="660" height="210" role="img" aria-label="DRG">
+<path d="M45 42L85 62L45 82L5 62Z" fill="#4a3c26"/>
+<path d="M45 42L85 62L45 82L5 62Z" fill="none" stroke="#efe6c8" stroke-width="4" stroke-linejoin="miter" stroke-linecap="square"/>
+<path d="M45 62C45 62 32 39.9 32 28.199999999999996A13 13 0 0 1 58 28.199999999999996C58 39.9 45 62 45 62Z" fill="#f3d27a"/>
+<circle cx="45" cy="28.199999999999996" r="5" fill="#1b160f"/>
+<g transform="translate(0 15)"><path d="M110 0V60H126A30 30 0 0 0 126 0ZM170 60V0H188A15 15 0 0 1 188 30H170M269.2 8.8A30 30 0 1 0 278 30H251" fill="none" stroke="#efe6c8" stroke-width="9" stroke-linejoin="miter" stroke-linecap="square"/><path d="M181 30H191L209 64.5H199Z" fill="#efe6c8"/></g>
+</svg>
